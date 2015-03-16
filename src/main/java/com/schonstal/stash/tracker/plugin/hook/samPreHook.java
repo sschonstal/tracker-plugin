@@ -9,6 +9,8 @@ import com.atlassian.stash.util.Page;
 import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageRequestImpl;
 import com.schonstal.stash.tracker.plugin.Tracker;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.util.Collection;
 
@@ -26,20 +28,14 @@ public class samPreHook implements PreReceiveRepositoryHook
     public boolean onReceive(RepositoryHookContext context, Collection<RefChange> refChanges, HookResponse hookResponse)
     {
 
-        //CommitRequest cr = new CommitRequest();
-        hookResponse.out().println("Count = " + refChanges.size());
-
-
-
         for (RefChange refChange : refChanges)
         {
-
             CommitsBetweenRequest.Builder commitsBetweenBuilder = new CommitsBetweenRequest.Builder(context.getRepository() );
             commitsBetweenBuilder.exclude(refChange.getFromHash()); //Starting with
             commitsBetweenBuilder.include(refChange.getToHash()); // ending with
 
             PageRequest pageRequest = new PageRequestImpl(0,3);
-            Tracker tracker = new Tracker(context.getSettings());
+            Tracker tracker = new Tracker(context.getSettings(), HttpClientBuilder.create().build(), new HttpPost());
             tracker.hookResponse = hookResponse;
 
             Page<Commit> commits;
@@ -47,13 +43,12 @@ public class samPreHook implements PreReceiveRepositoryHook
                 commits = commitService.getCommitsBetween(commitsBetweenBuilder.build(), pageRequest);
                 for (Commit commit : commits.getValues()) {
                     hookResponse.out().println( "Sams Plugin commit id = " + commit.getId() + " by " + commit.getAuthor() + " Message = " + commit.getMessage() + "\n");
-
                     tracker.postCommit(commit);
                 }
                 pageRequest = commits.getNextPageRequest();
             } while (!commits.getIsLastPage());
 
         }
-        return false;
+        return true;
     }
 }

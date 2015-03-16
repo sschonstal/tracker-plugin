@@ -3,9 +3,15 @@ package com.schonstal.stash.tracker.plugin;
 import com.atlassian.stash.commit.Commit;
 import com.atlassian.stash.hook.HookResponse;
 import com.atlassian.stash.setting.Settings;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
+import java.io.*;
+import java.net.URI;
+
 
 /**
  * Created by Sam Schonstal on 3/14/15. //woot woot pi day
@@ -25,109 +31,74 @@ public class Tracker {
     private Settings settings;
     private final String sourceCommitUrl = "https://www.pivotaltracker.com/services/v5/source_commits";
     private String stashRepoUrl;
+    private CloseableHttpClient httpClient;
+    private HttpPost httpPost;
 
-    public Tracker(Settings settings)
-    {
+    public Tracker(Settings settings, CloseableHttpClient httpClient, HttpPost httpPost) {
         hookResponse = null;
         this.settings = settings;
+        this.httpClient = httpClient;
+        this.httpPost = httpPost;
 
-        String apiKey = settings.getString("apiKey");
-        if (apiKey == null)
-        {
+        apiKey = settings.getString("apiKey");
+        if (apiKey == null) {
             //throw new IllegalArgumentException("apiKey missing");
+            apiKey = "35fccc826fa5cd1eb22db6d62b788899";
         }
 
-        String stashRepoUrl = settings.getString("stashRepoUrl");
-        if (stashRepoUrl == null)
-        {
+        stashRepoUrl = settings.getString("stashRepoUrl");
+        if (stashRepoUrl == null) {
             //throw new IllegalArgumentException("stashRepoUrl missing");
+            stashRepoUrl = "http:///";
         }
     }
 
-    public void postCommit(Commit commit)
-    {
+    public void postCommit(Commit commit)  {
 
+        try {
+            httpPost.setURI(new URI(sourceCommitUrl));
 
-        String storyId =  getStoryId(commit.getMessage());
-        if(storyId == null)
-        {
-            return;
-        }
+            StringEntity params = buildParams(commit);
+            httpPost.addHeader("Content-Type", "application/json");
+            httpPost.addHeader("X-TrackerToken", apiKey);
+            httpPost.setEntity(params);
+            HttpResponse httpResponse = httpClient.execute(httpPost);
 
-        Boolean finishes = false;
-
-        if(hookResponse != null)
-        {
-            hookResponse.out().println("Sams Plugin commit by " + commit.getAuthor() + " Message = " + commit.getMessage() + " storyID = " + storyId+ "\n");
-
-        }
-    }
-
-    private String getStoryId(String message)
-    {
-        String storyId = null;
-        String bracketedString = getBracketedString(message);
-
-        if(bracketedString == null)
-        {
-            return null;
-        }
-
-        storyId = getStoryNumber(bracketedString);
-
-        return storyId;
-    }
-
-    private String getStoryNumber(String bracketedString) {
-        String storyNumber = null;
-
-        int start = bracketedString.indexOf('#');
-        if (start > 0) {
-            start++;
-            int end = bracketedString.indexOf(' ', start);
-            if (end > 0)
-            {
-                storyNumber = bracketedString.substring(start, end);
-            } else {
-                storyNumber = bracketedString.substring(start);
+            if(httpResponse.getStatusLine().getStatusCode() != 200) {
+                //TODO Log Error
+                if (hookResponse != null) {
+                    hookResponse.out().println("Post Error " + httpResponse.getStatusLine().getReasonPhrase() + "\n");
+                }
+            }
+        }catch (Exception ex) {
+            //TODO Log Error
+        } finally {
+            try {
+                httpClient.close();
+            } catch (Exception e) {
+                //TODO Log Error
             }
         }
 
-        Matcher matcher = Pattern.compile("[0-9]*").matcher(storyNumber);
-        if(!matcher.matches())
-        {
+    }
+
+    private StringEntity buildParams(Commit commit) throws UnsupportedEncodingException {
+
+        MessageParser messageParser = new MessageParser(commit.getMessage());
+        if (messageParser.getStoryId() == null) {
             return null;
         }
 
-        return storyNumber;
-    }
+        if (hookResponse != null) {
+            hookResponse.out().println("Sam's Plugin commit by " + commit.getAuthor() + " Message = " + commit.getMessage() + " storyID = " + messageParser.getStoryId() + "\n");
 
-
-    private String getBracketedString(String message)
-    {
-        String bracketedString = null;
-
-        int start = message.indexOf('[');
-        if (start > 0)
-        {
-            int end = message.indexOf(']', start);
-            if (end > 0)
-            {
-                bracketedString = message.substring(start, end);
-            }
         }
-        return bracketedString;
-    }
 
-    private Boolean isFinished(String message)
-    {
-        String bracketedString = getBracketedString(message);
+        StringEntity params = new StringEntity("{\"source_commit\": {\"commit_id\":\"" + messageParser.getStoryId()  + "\",\n" +
+                "\"message\":\"" + commit.getMessage() + "\" ,\n" +
+                "\"url\":\"" + stashRepoUrl + "/" + commit.getId() + "\",\n" +
+                "\"author\":\""+ commit.getAuthor().getName() +"\"}}");
 
-        Matcher matcher = Pattern.compile("[Ff]inishes").matcher(bracketedString);
-        if(matcher.matches())
-        {
-            return true;
-        }
-        return false;
+        return params;
     }
 }
