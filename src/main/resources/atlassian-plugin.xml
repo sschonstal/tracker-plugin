@@ -35,5 +35,9 @@
   <repository-hook name="sam Pre Hook" i18n-name-key="sam-pre-hook.name" key="sam-pre-hook" class="com.schonstal.stash.tracker.plugin.hook.samPreHook">
     <description key="sam-pre-hook.description">The sam Pre Hook Plugin</description>
     <icon>icon-example.png</icon>
+      <config-form name="Sam pre Hook Config" key="sam-pre-hook">
+          <view>com.schonstal.stash.tracker.plugin.hook.samprehook.view</view>
+          <directory location="/static/"/>
+      </config-form>
   </repository-hook>
 </atlassian-plugin>

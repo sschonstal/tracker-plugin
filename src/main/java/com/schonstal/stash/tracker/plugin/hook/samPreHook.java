@@ -5,6 +5,9 @@ import com.atlassian.stash.hook.repository.*;
 import com.atlassian.stash.repository.*;
 import com.atlassian.stash.commit.*;
 import com.atlassian.stash.commit.CommitService;
+import com.atlassian.stash.setting.RepositorySettingsValidator;
+import com.atlassian.stash.setting.Settings;
+import com.atlassian.stash.setting.SettingsValidationErrors;
 import com.atlassian.stash.util.Page;
 import com.atlassian.stash.util.PageRequest;
 import com.atlassian.stash.util.PageRequestImpl;
@@ -14,7 +17,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 import java.util.Collection;
 
-public class samPreHook implements PreReceiveRepositoryHook
+public class samPreHook implements PreReceiveRepositoryHook, RepositorySettingsValidator
 {
     private final CommitService commitService;
 
@@ -42,13 +45,25 @@ public class samPreHook implements PreReceiveRepositoryHook
             do {
                 commits = commitService.getCommitsBetween(commitsBetweenBuilder.build(), pageRequest);
                 for (Commit commit : commits.getValues()) {
-                    hookResponse.out().println( "Sams Plugin commit id = " + commit.getId() + " by " + commit.getAuthor() + " Message = " + commit.getMessage() + "\n");
                     tracker.postCommit(commit);
                 }
                 pageRequest = commits.getNextPageRequest();
             } while (!commits.getIsLastPage());
-
         }
         return true;
+    }
+
+    @Override
+    public void validate(Settings settings, SettingsValidationErrors errors, Repository repository)
+    {
+        if (settings.getString("apiKey", "").isEmpty())
+        {
+            errors.addFieldError("apiKey", "Tracker API Key is blank, please supply one");
+        }
+
+        if (settings.getString("stashRepoUrl", "").isEmpty())
+        {
+            errors.addFieldError("stashRepoUrl", "Stash URL is blank, please supply one");
+        }
     }
 }

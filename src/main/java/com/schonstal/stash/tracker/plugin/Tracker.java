@@ -28,7 +28,6 @@ public class Tracker {
 
     public HookResponse hookResponse;
     private String apiKey;
-    private Settings settings;
     private final String sourceCommitUrl = "https://www.pivotaltracker.com/services/v5/source_commits";
     private String stashRepoUrl;
     private CloseableHttpClient httpClient;
@@ -36,20 +35,18 @@ public class Tracker {
 
     public Tracker(Settings settings, CloseableHttpClient httpClient, HttpPost httpPost) {
         hookResponse = null;
-        this.settings = settings;
         this.httpClient = httpClient;
         this.httpPost = httpPost;
 
         apiKey = settings.getString("apiKey");
         if (apiKey == null) {
-            //throw new IllegalArgumentException("apiKey missing");
-            apiKey = "35fccc826fa5cd1eb22db6d62b788899";
+            throw new IllegalArgumentException("apiKey missing");
+            //apiKey = "35fccc826fa5cd1eb22db6d62b788899";
         }
 
         stashRepoUrl = settings.getString("stashRepoUrl");
         if (stashRepoUrl == null) {
-            //throw new IllegalArgumentException("stashRepoUrl missing");
-            stashRepoUrl = "http:///";
+            throw new IllegalArgumentException("stashRepoUrl missing");
         }
     }
 
@@ -94,6 +91,7 @@ public class Tracker {
 
         }
 
+        //TODO JSONify this
         StringEntity params = new StringEntity("{\"source_commit\": {\"commit_id\":\"" + messageParser.getStoryId()  + "\",\n" +
                 "\"message\":\"" + commit.getMessage() + "\" ,\n" +
                 "\"url\":\"" + stashRepoUrl + "/" + commit.getId() + "\",\n" +
