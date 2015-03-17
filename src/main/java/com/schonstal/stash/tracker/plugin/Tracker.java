@@ -7,9 +7,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-
-import java.io.*;
 import java.net.URI;
 
 
@@ -32,6 +33,9 @@ public class Tracker {
     private String stashRepoUrl;
     private CloseableHttpClient httpClient;
     private HttpPost httpPost;
+
+    private static final Logger log = LoggerFactory.getLogger(Tracker.class);
+
 
     public Tracker(Settings settings, CloseableHttpClient httpClient, HttpPost httpPost) {
         hookResponse = null;
@@ -56,47 +60,48 @@ public class Tracker {
             httpPost.setURI(new URI(sourceCommitUrl));
 
             StringEntity params = buildParams(commit);
+            if(params == null) {
+                return;
+            }
+
             httpPost.addHeader("Content-Type", "application/json");
             httpPost.addHeader("X-TrackerToken", apiKey);
             httpPost.setEntity(params);
             HttpResponse httpResponse = httpClient.execute(httpPost);
 
             if(httpResponse.getStatusLine().getStatusCode() != 200) {
-                //TODO Log Error
-                if (hookResponse != null) {
-                    hookResponse.out().println("Post Error " + httpResponse.getStatusLine().getReasonPhrase() + "\n");
-                }
+                log.info("Post Error for commit {} Reason {}", commit.getId(),  httpResponse.getStatusLine().getReasonPhrase());
             }
         }catch (Exception ex) {
-            //TODO Log Error
+            log.info("Post Commit Exception ()", ex);
         } finally {
             try {
                 httpClient.close();
-            } catch (Exception e) {
-                //TODO Log Error
+            } catch (Exception ex) {
+                log.info("Post Commit Exception closing httpClient ()", ex);
             }
         }
 
     }
 
-    private StringEntity buildParams(Commit commit) throws UnsupportedEncodingException {
+    private StringEntity buildParams(Commit commit) throws Exception {
 
         MessageParser messageParser = new MessageParser(commit.getMessage());
         if (messageParser.getStoryId() == null) {
             return null;
         }
 
-        if (hookResponse != null) {
-            hookResponse.out().println("Sam's Plugin commit by " + commit.getAuthor() + " Message = " + commit.getMessage() + " storyID = " + messageParser.getStoryId() + "\n");
+        log.info("Tracker Plugin commit by {} - {}", commit.getAuthor(), commit.getMessage());
 
-        }
+        JSONObject commitParams = new JSONObject();
+        commitParams.put("commit_id", commit.getId());
+        commitParams.put("message", commit.getMessage());
+        commitParams.put("url", stashRepoUrl + "/" + commit.getId());
+        commitParams.put("author", commit.getAuthor().getName());
+        JSONObject sourceCommit = new JSONObject();
+        sourceCommit.put("source_commit", commitParams);
 
-        //TODO JSONify this
-        StringEntity params = new StringEntity("{\"source_commit\": {\"commit_id\":\"" + messageParser.getStoryId()  + "\",\n" +
-                "\"message\":\"" + commit.getMessage() + "\" ,\n" +
-                "\"url\":\"" + stashRepoUrl + "/" + commit.getId() + "\",\n" +
-                "\"author\":\""+ commit.getAuthor().getName() +"\"}}");
+        return new StringEntity(sourceCommit.toString());
 
-        return params;
     }
 }
