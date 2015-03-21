@@ -4,6 +4,7 @@ import com.atlassian.stash.commit.Commit;
 import com.atlassian.stash.commit.CommitService;
 import com.atlassian.stash.commit.CommitsBetweenRequest;
 import com.atlassian.stash.hook.repository.*;
+import com.atlassian.stash.nav.NavBuilder;
 import com.atlassian.stash.repository.*;
 import com.atlassian.stash.setting.*;
 import com.atlassian.stash.util.Page;
@@ -18,10 +19,12 @@ import java.util.Collection;
 public class trackerUpdatePostReceiveHook implements AsyncPostReceiveRepositoryHook, RepositorySettingsValidator
 {
     private final CommitService commitService;
+    private final NavBuilder navBuilder;
 
-    public trackerUpdatePostReceiveHook( CommitService commitService)
+    public trackerUpdatePostReceiveHook( CommitService commitService, NavBuilder navBuilder)
     {
         this.commitService = commitService;
+        this.navBuilder = navBuilder;
     }
 
     @Override
@@ -31,7 +34,7 @@ public class trackerUpdatePostReceiveHook implements AsyncPostReceiveRepositoryH
         {
             CommitsBetweenRequest.Builder commitsBetweenBuilder = new CommitsBetweenRequest.Builder(context.getRepository() );
             commitsBetweenBuilder.exclude(refChange.getFromHash()); //Starting with
-            commitsBetweenBuilder.include(refChange.getToHash()); // ending with
+            commitsBetweenBuilder.include(refChange.getToHash()); // Ending with
 
             PageRequest pageRequest = new PageRequestImpl(0,3);
             Tracker tracker = new Tracker(context.getSettings(), HttpClientBuilder.create().build(), new HttpPost());
@@ -40,7 +43,7 @@ public class trackerUpdatePostReceiveHook implements AsyncPostReceiveRepositoryH
             do {
                 commits = commitService.getCommitsBetween(commitsBetweenBuilder.build(), pageRequest);
                 for (Commit commit : commits.getValues()) {
-                    tracker.postCommit(commit);
+                    tracker.postCommit(commit, navBuilder.repo(context.getRepository()).changeset(commit.getId()).buildAbsolute());
                 }
                 pageRequest = commits.getNextPageRequest();
             } while (!commits.getIsLastPage());
@@ -53,11 +56,6 @@ public class trackerUpdatePostReceiveHook implements AsyncPostReceiveRepositoryH
         if (settings.getString("apiKey", "").isEmpty())
         {
             errors.addFieldError("apiKey", "Tracker API Key is blank, please supply one");
-        }
-
-        if (settings.getString("stashRepoUrl", "").isEmpty())
-        {
-            errors.addFieldError("stashRepoUrl", "Stash URL is blank, please supply one");
         }
     }
 }

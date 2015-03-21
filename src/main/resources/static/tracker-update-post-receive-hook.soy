@@ -9,14 +9,7 @@
         {param id: 'apiKey' /}
         {param value: $config ? $config['apiKey'] : null /}
         {param labelContent: 'Tracker API Key'  /}
-        {param descriptionText: 'Pivotal Tracker API Key' /}
+        {param descriptionText: 'Pivotal Tracker API Key. From your profile on Pivotal Tracker' /}
         {param errorTexts: $errors ? $errors['apiKey'] : null /}
-    {/call}
-    {call aui.form.textField}
-        {param id: 'stashRepoUrl' /}
-        {param value: $config ? $config['stashRepoUrl'] : null /}
-        {param labelContent: 'Stash URL'  /}
-        {param descriptionText: 'URL to stash repo for creating links to commit' /}
-        {param errorTexts: $errors ? $errors['stashRepoUrl'] : null /}
     {/call}
 {/template}

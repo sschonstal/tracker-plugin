@@ -15,9 +15,9 @@ public class TrackMyStashPluginComponentImpl implements TrackMyStashPluginCompon
     {
         if(null != applicationProperties)
         {
-            return "myComponent:" + applicationProperties.getDisplayName();
+            return "trackMyStash:" + applicationProperties.getDisplayName();
         }
         
-        return "myComponent";
+        return "trackMyStash";
     }
 }

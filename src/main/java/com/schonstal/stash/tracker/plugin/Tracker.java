@@ -3,6 +3,7 @@ package com.schonstal.stash.tracker.plugin;
 import com.atlassian.stash.commit.Commit;
 import com.atlassian.stash.hook.HookResponse;
 import com.atlassian.stash.setting.Settings;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -18,19 +19,12 @@ import java.net.URI;
  * Created by Sam Schonstal on 3/14/15. //woot woot pi day
  */
 
-//curl -X POST -H"X-TrackerToken: 35fccc826fa5cd1eb22db6d62b788899" "https://www.pivotaltracker.com/services/v5/source_commits"
-//        -H "Content-Type: application/json"
-//        -d'{"source_commit": {"commit_id":"825bf5a3772",
-//                                "message":"adjust presence status bubble [fixes #87444472]" ,
-//                                "url":"http://stash.ds.adp.com/projects/NSCE/repos/yeti/commits/825bf5a3772aff2637259fa9ff40cd28d2c0aab4",
-//                                "author":"sam schonstal"}}'
 
 public class Tracker {
 
     public HookResponse hookResponse;
     private String apiKey;
     private final String sourceCommitUrl = "https://www.pivotaltracker.com/services/v5/source_commits";
-    private String stashRepoUrl;
     private CloseableHttpClient httpClient;
     private HttpPost httpPost;
 
@@ -45,21 +39,15 @@ public class Tracker {
         apiKey = settings.getString("apiKey");
         if (apiKey == null) {
             throw new IllegalArgumentException("apiKey missing");
-            //apiKey = "35fccc826fa5cd1eb22db6d62b788899";
-        }
-
-        stashRepoUrl = settings.getString("stashRepoUrl");
-        if (stashRepoUrl == null) {
-            throw new IllegalArgumentException("stashRepoUrl missing");
         }
     }
 
-    public void postCommit(Commit commit)  {
+    public void postCommit(Commit commit, String StashRepoUrl)  {
 
         try {
             httpPost.setURI(new URI(sourceCommitUrl));
 
-            StringEntity params = buildParams(commit);
+            StringEntity params = buildParams(commit, StashRepoUrl);
             if(params == null) {
                 return;
             }
@@ -70,21 +58,21 @@ public class Tracker {
             HttpResponse httpResponse = httpClient.execute(httpPost);
 
             if(httpResponse.getStatusLine().getStatusCode() != 200) {
-                log.info("Post Error for commit {} Reason {}", commit.getId(),  httpResponse.getStatusLine().getReasonPhrase());
+                log.error("Post Error for commit {} Reason {}", commit.getId(), httpResponse.getStatusLine().getReasonPhrase());
             }
-        }catch (Exception ex) {
-            log.info("Post Commit Exception ()", ex);
+        } catch (Exception ex) {
+            log.error("Post Commit Exception ()", ex);
         } finally {
             try {
                 httpClient.close();
             } catch (Exception ex) {
-                log.info("Post Commit Exception closing httpClient ()", ex);
+                log.error("Post Commit Exception closing httpClient ()", ex);
             }
         }
 
     }
 
-    private StringEntity buildParams(Commit commit) throws Exception {
+    private StringEntity buildParams(Commit commit, String stashRepoUrl) throws Exception {
 
         MessageParser messageParser = new MessageParser(commit.getMessage());
         if (messageParser.getStoryId() == null) {
@@ -96,7 +84,7 @@ public class Tracker {
         JSONObject commitParams = new JSONObject();
         commitParams.put("commit_id", commit.getId());
         commitParams.put("message", commit.getMessage());
-        commitParams.put("url", stashRepoUrl + "/" + commit.getId());
+        commitParams.put("url", stashRepoUrl);
         commitParams.put("author", commit.getAuthor().getName());
         JSONObject sourceCommit = new JSONObject();
         sourceCommit.put("source_commit", commitParams);

@@ -38,14 +38,14 @@ public class TrackerTest {
         prepareMocks();
         httpPost = new HttpPost();
         Tracker tracker = new Tracker(mockSettings, mockHttpClient, httpPost);
-        tracker.postCommit(mockCommit);
+        tracker.postCommit(mockCommit, "http://schonstal.com/projects/tracker/repos/test/825bf5a3772aff2637259fa9ff40cd28d2c0aab4");
 
         HttpEntity httpEntity = httpPost.getEntity();
 
         if (httpEntity != null) {
             JSONObject parameters = new JSONObject(EntityUtils.toString(httpEntity));
             JSONObject sourceCommit = parameters.getJSONObject("source_commit");
-            assertEquals("Wrong Story Id", "87444472", sourceCommit.getString("commit_id"));
+            assertEquals("Wrong Commit Id", "825bf5a3772aff2637259fa9ff40cd28d2c0aab4", sourceCommit.getString("commit_id"));
             assertEquals("Wrong Author", "Sam Schonstal", sourceCommit.getString("author"));
             assertEquals("Wrong Stash Url", "http://schonstal.com/projects/tracker/repos/test/825bf5a3772aff2637259fa9ff40cd28d2c0aab4", sourceCommit.getString("url"));
             assertEquals("Wrong Commit Message", "This is a comment [#87444472]", sourceCommit.getString("message"));
@@ -59,7 +59,6 @@ public class TrackerTest {
     {
         mockSettings = mock(Settings.class);
         when(mockSettings.getString("apiKey")).thenReturn("123456789abcdefghij");
-        when(mockSettings.getString("stashRepoUrl")).thenReturn("http://schonstal.com/projects/tracker/repos/test");
 
         mockStatusLine = mock(StatusLine.class);
         when(mockStatusLine.getStatusCode()).thenReturn(200);
