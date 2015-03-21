@@ -2,11 +2,11 @@ package com.schonstal.stash.tracker.plugin;
 
 import com.atlassian.sal.api.ApplicationProperties;
 
-public class MyPluginComponentImpl implements MyPluginComponent
+public class TrackMyStashPluginComponentImpl implements TrackMyStashPluginComponent
 {
     private final ApplicationProperties applicationProperties;
 
-    public MyPluginComponentImpl(ApplicationProperties applicationProperties)
+    public TrackMyStashPluginComponentImpl(ApplicationProperties applicationProperties)
     {
         this.applicationProperties = applicationProperties;
     }

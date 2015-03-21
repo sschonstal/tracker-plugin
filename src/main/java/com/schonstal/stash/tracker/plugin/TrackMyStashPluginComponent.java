@@ -1,6 +1,6 @@
 package com.schonstal.stash.tracker.plugin;
 
-public interface MyPluginComponent
+public interface TrackMyStashPluginComponent
 {
     String getName();
 }
