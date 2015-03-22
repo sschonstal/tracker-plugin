@@ -1,35 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <atlassian-plugin key="${project.groupId}.${project.artifactId}" name="${project.name}" plugins-version="2">
-  <plugin-info>
-    <description>${project.description}</description>
-    <version>${project.version}</version>
-    <vendor name="${project.organization.name}" url="${project.organization.url}"/>
-    <param name="plugin-icon">images/pluginIcon.png</param>
-    <param name="plugin-logo">images/pluginLogo.png</param>
-  </plugin-info>
-  <!-- add our i18n resource -->
-  <resource type="i18n" name="i18n" location="tracker-plugin"/>
-  <!-- add our web resources -->
-  <web-resource key="tracker-plugin-resources" name="tracker-plugin Web Resources">
-    <dependency>com.atlassian.auiplugin:ajs</dependency>
-    <resource type="download" name="tracker-plugin.css" location="/css/tracker-plugin.css"/>
-    <resource type="download" name="tracker-plugin.js" location="/js/tracker-plugin.js"/>
-    <resource type="download" name="images/" location="/images"/>
-    <context>tracker-plugin</context>
-  </web-resource>
-  <!-- publish our component -->
-  <component key="myPluginComponent" class="com.schonstal.stash.tracker.plugin.TrackMyStashPluginComponentImpl" public="true">
-    <interface>com.schonstal.stash.tracker.plugin.TrackMyStashPluginComponent</interface>
-  </component>
-  <!-- import from the product container -->
-  <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
-  <repository-hook name="Track My Stash" i18n-name-key="tracker-update-post-receive-hook.name" key="tracker-update-post-receive-hook" class="com.schonstal.stash.tracker.plugin.hook.trackerUpdatePostReceiveHook">
-    <description key="tracker-update-post-receive-hook.description">A updates Pivotal Tracker with commit information when code is pushed with [#nnnnn] story number in comment.</description>
-    <icon>images/TrackMyStashIcon.png</icon>
-    <config-form name="Track My Stash Configuration" key="tracker-update-post-receive-hook-config">
-      <view>com.schonstal.stash.tracker.plugin.hook.trackerupdatepostreceivehook.view</view>
-      <directory location="/static/"/>
-    </config-form>
-  </repository-hook>
- </atlassian-plugin>
+    <plugin-info>
+        <description>${project.description}</description>
+        <version>${project.version}</version>
+        <vendor name="${project.organization.name}" url="${project.organization.url}"/>
+        <param name="atlassian-data-center-compatible">true</param>
+        <param name="plugin-icon">images/TrackMyStashIcon.png</param>
+        <param name="plugin-logo">images/TrackMyStashLogo.png</param>
+    </plugin-info>
+    <!-- add our i18n resource -->
+    <resource type="i18n" name="i18n" location="tracker-plugin"/>
+    <!-- add our web resources -->
+    <web-resource key="tracker-plugin-resources" name="tracker-plugin Web Resources">
+        <dependency>com.atlassian.auiplugin:ajs</dependency>
+        <resource type="download" name="tracker-plugin.css" location="/css/tracker-plugin.css"/>
+        <resource type="download" name="tracker-plugin.js" location="/js/tracker-plugin.js"/>
+        <resource type="download" name="images/" location="/images"/>
+        <context>tracker-plugin</context>
+    </web-resource>
+    <!-- publish our component -->
+    <component key="myPluginComponent" class="com.schonstal.stash.tracker.plugin.TrackMyStashPluginComponentImpl"
+               public="true">
+        <interface>com.schonstal.stash.tracker.plugin.TrackMyStashPluginComponent</interface>
+    </component>
+    <!-- import from the product container -->
+    <component-import key="applicationProperties" interface="com.atlassian.sal.api.ApplicationProperties"/>
+    <repository-hook name="Track My Stash" i18n-name-key="tracker-update-post-receive-hook.name"
+                     key="tracker-update-post-receive-hook"
+                     class="com.schonstal.stash.tracker.plugin.hook.trackerUpdatePostReceiveHook">
+        <description key="tracker-update-post-receive-hook.description">A updates Pivotal Tracker with commit
+            information when code is pushed with [#nnnnn] story number in comment.
+        </description>
+        <icon>images/TrackMyStashIcon.png</icon>
+        <config-form name="Track My Stash Configuration" key="tracker-update-post-receive-hook-config">
+            <view>com.schonstal.stash.tracker.plugin.hook.trackerupdatepostreceivehook.view</view>
+            <directory location="/static/"/>
+        </config-form>
+    </repository-hook>
+</atlassian-plugin>

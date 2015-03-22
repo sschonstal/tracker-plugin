@@ -4,13 +4,13 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.schonstal.stash.tracker.plugin</groupId>
     <artifactId>tracker-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0</version>
     <organization>
-        <name>Example Company</name>
-        <url>http://www.example.com/</url>
+        <name>Sam Schonstal</name>
+        <url>http://schonstal.com/</url>
     </organization>
-    <name>tracker-plugin</name>
-    <description>This is the com.schonstal.stash.tracker.plugin:tracker-plugin plugin for Atlassian Stash.</description>
+    <name>Track My Stash</name>
+    <description>This is the Track my Stash plugin for Atlassian Stash to post updates t Pivotal Tracker.</description>
     <packaging>atlassian-plugin</packaging>
     <dependencyManagement>
         <dependencies>
