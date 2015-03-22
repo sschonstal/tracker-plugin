@@ -42,9 +42,9 @@ public class Tracker {
         }
     }
 
-    public void postCommit(Commit commit, String StashRepoUrl)  {
+    public void postCommit(Commit commit, String StashRepoUrl)  throws Exception{
 
-        try {
+
             httpPost.setURI(new URI(sourceCommitUrl));
 
             StringEntity params = buildParams(commit, StashRepoUrl);
@@ -60,15 +60,7 @@ public class Tracker {
             if(httpResponse.getStatusLine().getStatusCode() != 200) {
                 log.error("Post Error for commit {} Reason {}", commit.getId(), httpResponse.getStatusLine().getReasonPhrase());
             }
-        } catch (Exception ex) {
-            log.error("Post Commit Exception ()", ex);
-        } finally {
-            try {
-                httpClient.close();
-            } catch (Exception ex) {
-                log.error("Post Commit Exception closing httpClient ()", ex);
-            }
-        }
+
 
     }
 
